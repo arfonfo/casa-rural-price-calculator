@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reparto Casa Rural 809€</title>
+  <style>
+    :root {
+      --bg-color: #0f172a; 
+      --card-bg: #1e293b; 
+      --accent: #0d9488;
+      --accent-light: #14b8a6; 
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8; 
+      --border-color: #334155;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); padding: 1rem; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 500px; margin: 0 auto; }
+    
+    header { text-align: center; margin-bottom: 1.5rem; background: var(--card-bg); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+    h1 { font-size: 1.4rem; color: var(--accent-light); margin-bottom: 0.25rem; }
+    p.subtitle { font-size: 0.85rem; color: var(--text-muted); }
+    
+    .summary-box { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); }
+    .stat-item { text-align: center; }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text-main); margin-top: 0.25rem; }
+    
+    .people-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .person-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .person-name { font-weight: 600; font-size: 1rem; }
+    
+    .controls { display: flex; align-items: center; gap: 1rem; }
+    select { background-color: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); padding: 0.4rem 0.6rem; border-radius: 6px; font-size: 0.95rem; font-weight: 600; outline: none; cursor: pointer; }
+    select:focus { border-color: var(--accent-light); }
+    .price-tag { font-size: 1.1rem; font-weight: 700; color: var(--accent-light); min-width: 75px; text-align: right; }
+    
+    .status-badge { font-size: 0.75rem; color: var(--accent-light); margin-top: 0.5rem; display: block; }
+    .total-card {
+      background: var(--card-bg);
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .total-price-tag {
+      font-size: 1.3rem;
+      color: var(--accent-light);
+    }
+  </style>
+
+<!-- Módulos de Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // ⚠️ SUSTITUYE ESTE OBJETO POR EL QUE TE DA FIREBASE EN SU CONSOLA
+    const firebaseConfig = {
+      apiKey: "AIzaSyCm_MfSB1uToRVEtSrkEzKEWux7lbHA0Mo",
+      authDomain: "casa-rural-da106.firebaseapp.com",
+      databaseURL: "https://casa-rural-da106-default-rtdb.firebaseio.com",
+      projectId: "casa-rural-da106",
+      storageBucket: "casa-rural-da106.firebasestorage.app",
+      messagingSenderId: "406375251329",
+      appId: "1:406375251329:web:adddaea9a48a3c63a2fc80"
+    };
+
+
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const TOTAL_CASA = 809;
+    const nombres = ["Abraham", "Alberto", "Ayala", "Belchí", "Billy", "Fuentes", "Meca", "Periko", "Alfon"];
+    let nochesEstado = {};
+
+    const container = document.getElementById('peopleContainer');
+    const totalNochesEl = document.getElementById('totalPersonaNoches');
+    const precioNocheEl = document.getElementById('precioBaseNoche');
+    const statusEl = document.getElementById('statusMessage');
+
+    // Escuchar cambios en la base de datos en tiempo real
+    const nochesRef = ref(db, 'noches');
+    onValue(nochesRef, (snapshot) => {
+      const data = snapshot.val();
+      
+      nochesEstado = {};
+      if (data && typeof data === 'object') {
+        nombres.forEach(nombre => {
+          // Nos aseguramos de forzar el tipo Number
+          nochesEstado[nombre] = data[nombre] !== undefined ? Number(data[nombre]) : 3;
+        });
+      } else {
+        // Inicialización por defecto si está vacía
+        nombres.forEach(nombre => nochesEstado[nombre] = 3);
+        set(ref(db, 'noches'), nochesEstado);
+      }
+      
+      renderList();
+      statusEl.textContent = "Datos actualizados";
+    });
+
+    window.actualizarNoches = function(nombre, valor) {
+      const numNoches = parseInt(valor, 10);
+      nochesEstado[nombre] = numNoches;
+      set(ref(db, 'noches/' + nombre), numNoches);
+    };
+
+    function renderList() {
+      container.innerHTML = '';
+      nombres.forEach(nombre => {
+        const val = Number(nochesEstado[nombre] !== undefined ? nochesEstado[nombre] : 3);
+        const card = document.createElement('div');
+        card.className = 'person-card';
+        card.innerHTML = `
+          <span class="person-name">${nombre}</span>
+          <div class="controls">
+            <select onchange="actualizarNoches('${nombre}', this.value)">
+              <option value="3" ${val === 3 ? 'selected' : ''}>3 noches</option>
+              <option value="2" ${val === 2 ? 'selected' : ''}>2 noches</option>
+              <option value="1" ${val === 1 ? 'selected' : ''}>1 noche</option>
+              <option value="0" ${val === 0 ? 'selected' : ''}>0 noches</option>
+            </select>
+            <span class="price-tag" id="price-${nombre}">0.00 €</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+      calcular();
+    }
+
+    function calcular() {
+      // Forzamos conversión a número para evitar concatenaciones de texto
+      const totalPersonaNoches = Object.values(nochesEstado).reduce((sum, n) => sum + Number(n || 0), 0);
+      const precioPorNoche = totalPersonaNoches > 0 ? (TOTAL_CASA / totalPersonaNoches) : 0;
+
+      totalNochesEl.textContent = totalPersonaNoches;
+      precioNocheEl.textContent = `${precioPorNoche.toFixed(2)} €`;
+
+      let sumaTotalCuotas = 0;
+
+      nombres.forEach(nombre => {
+        const cuota = Number(nochesEstado[nombre] || 0) * precioPorNoche;
+        sumaTotalCuotas += cuota;
+
+        const priceEl = document.getElementById(`price-${nombre}`);
+        if (priceEl) {
+          priceEl.textContent = `${cuota.toFixed(2)} €`;
+        }
+      });
+
+      // Actualizar el sumatorio final
+      const totalRecaudadoEl = document.getElementById('totalRecaudado');
+      if (totalRecaudadoEl) {
+        totalRecaudadoEl.textContent = `${sumaTotalCuotas.toFixed(2)} €`;
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>🏡 Casa Rural 2026</h1>
+      <p class="subtitle">Calculadora de estancia proporcional</p>
+      <span class="status-badge" id="statusMessage">Conectando a la base de datos...</span>
+      
+      <div class="summary-box">
+        <div class="stat-item">
+          <div class="stat-label">Persona-Noches</div>
+          <div class="stat-value" id="totalPersonaNoches">27</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Precio / Noche</div>
+          <div class="stat-value" id="precioBaseNoche">0.00 €</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="people-list" id="peopleContainer"></div>
+    <!-- Tarjeta de Total Final -->
+    <div class="total-card">
+      <span>Total precio casa</span>
+      <span class="total-price-tag" id="totalRecaudado">0.00 €</span>
+    </div>
+  </div>
+
+</body>
+</html>
