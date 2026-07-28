@@ -191,6 +191,30 @@
       color: var(--accent-light);
       font-weight: 600;
     }
+
+    .gif-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 2rem 0 1rem 0;
+      text-align: center;
+    }
+
+    .chiquito-gif {
+      max-width: 100%;
+      width: 250px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-color, #334155);
+    }
+
+    .gif-caption {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
   </style>
 
  <!-- Módulos de Firebase SDK -->
@@ -368,6 +392,11 @@
       <span>Total precio casa</span>
       <span class="total-price-tag" id="totalRecaudado">0.00 €</span>
     </div>
+
+    <div class="gif-container">
+    <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXl1Z2VxazZkNzUxbml0cW55a2tvZ3l0eThjaG85c3Z5YWEwNngxaiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xRKLqGcNxLXQ4/giphy.gif" alt="Chiquito de la Calzada" class="chiquito-gif">
+    <p class="gif-caption">¡No te digo trigo por no llamarte Rodrigo! ¡Al ataqueee!</p>
+  </div>
   </div>
 
 </body>
